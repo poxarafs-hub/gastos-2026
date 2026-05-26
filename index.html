@@ -410,7 +410,11 @@ tr.paid-row .check-col{opacity:1!important}
       </div>
       <div class="grid-2">
         <div class="card"><div class="card-title">Composição de despesas do mês</div><div style="position:relative;height:220px"><canvas id="c-pie"></canvas></div></div>
-        <div class="card"><div class="card-title">Gastos por categoria — mês</div><div style="position:relative;height:220px"><canvas id="c-cats"></canvas></div></div>
+        <div class="card"><div class="card-title">🎯 Top 5 maiores gastos — <span id="dash-cats-mes-label"></span></div><div style="position:relative;height:220px"><canvas id="c-cats"></canvas></div></div>
+      </div>
+      <div class="card" id="card-gargalo">
+        <div class="card-title">🔍 Análise de gargalo — onde está indo mais dinheiro</div>
+        <div id="dash-gargalo"></div>
       </div>
       <div class="card"><div class="card-title">Detalhamento de receitas</div><div id="dash-rec-detail"></div></div>
     </div>
@@ -1057,6 +1061,7 @@ function renderDash(){
   html += '<div class="dash-row-grid">';
   html += mc("Receitas", fmt(rec), "g");
   html += mc("Clínica (líq.)", fmtS(clinRec-clinDeb), clinRec>=clinDeb?"t":"r");
+  html += mc("Total entradas", fmt(rec+clinRec), "g");
   html += mc("💼 Investido/Guardado no mês", fmt(inv), "p");
   html += '</div>';
 
@@ -1106,29 +1111,76 @@ function renderDash(){
       options:{responsive:true,maintainAspectRatio:false,cutout:"55%",plugins:{legend:{position:"right",labels:{font:{size:11},boxWidth:10,padding:8}}}}});
   }
 
-  // Gráfico por categoria de gastos
+  // Top 5 maiores gastos do mês
+  document.getElementById("dash-cats-mes-label").textContent = MESES[m];
   dc("cats");
   var catTotals = {};
   lancs.forEach(function(l){
     if(l.tipo==="receita"||l.tipo==="clinica-rec") return;
     getMeses(l).forEach(function(ml){
       if(ml.mes===m){
-        var cat = l.gastoCat || l.cat || l.aptocat || l.tipo;
+        var cat = l.gastoCat || l.subcat || l.cat || l.aptocat || l.tipo;
         catTotals[cat]=(catTotals[cat]||0)+ml.val;
       }
     });
   });
-  var catKeys = Object.keys(catTotals).sort(function(a,b){return catTotals[b]-catTotals[a];}).slice(0,8);
+  var catKeys = Object.keys(catTotals).sort(function(a,b){return catTotals[b]-catTotals[a];}).slice(0,5);
+  var totalDespMes = deb + clinDeb;
   if(catKeys.length){
     charts["cats"]=new Chart(document.getElementById("c-cats"),{type:"bar",
-      data:{labels:catKeys,datasets:[{label:"Gastos",data:catKeys.map(function(k){return catTotals[k];}),backgroundColor:PALETTE.map(function(c){return c+"cc";}),borderRadius:5}]},
-      options:{...chartOpts(),indexAxis:"y",plugins:{legend:{display:false}},scales:{x:{ticks:{callback:function(v){return "R$"+Math.round(v/1000)+"k";},font:{size:10}},grid:{color:"rgba(0,0,0,.04)"}},y:{ticks:{font:{size:10}},grid:{display:false}}}}});
+      data:{labels:catKeys,datasets:[{label:"Gastos",data:catKeys.map(function(k){return catTotals[k];}),
+        backgroundColor:["#c94f2a","#d4850a","#3478c8","#7c5cbf","#1a9e70"].map(function(c){return c+"cc";}),
+        borderRadius:6}]},
+      options:{...chartOpts(),indexAxis:"y",
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:function(ctx){
+          var pct = totalDespMes>0?(ctx.raw/totalDespMes*100).toFixed(1):0;
+          return " "+fmt(ctx.raw)+" ("+pct+"% das despesas)";
+        }}}},
+        scales:{x:{ticks:{callback:function(v){return "R$"+Math.round(v/1000)+"k";},font:{size:10}},grid:{color:"rgba(0,0,0,.04)"}},
+                y:{ticks:{font:{size:10},maxLength:14},grid:{display:false}}}}});
   }
 
-  // Receitas detalhe
-  var rLancs=lancs.filter(function(l){return l.tipo==="receita" && getMeses(l).some(function(ml){return ml.mes===m;});});
+  // Análise de gargalo
+  var gargaloHtml = "";
+  if(catKeys.length){
+    gargaloHtml += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:12px">';
+    catKeys.forEach(function(cat,i){
+      var val = catTotals[cat];
+      var pct = totalDespMes>0?(val/totalDespMes*100).toFixed(1):0;
+      var cores=["#c94f2a","#d4850a","#3478c8","#7c5cbf","#1a9e70"];
+      var cor = cores[i]||"#888";
+      var barW = totalDespMes>0?Math.round(val/totalDespMes*100):0;
+      gargaloHtml += '<div style="background:var(--surface2);border-radius:10px;padding:12px;border-left:4px solid'+cor+'">';
+      gargaloHtml += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">';
+      gargaloHtml += '<span style="font-weight:700;font-size:13px;color:var(--text1)">'+(i===0?'🔴 ':'')+(i===1?'🟠 ':'')+'#'+(i+1)+' '+cat+'</span>';
+      gargaloHtml += '<span style="font-size:12px;font-family:JetBrains Mono;font-weight:700;color:'+cor+'">'+pct+'%</span>';
+      gargaloHtml += '</div>';
+      gargaloHtml += '<div style="background:var(--border);border-radius:99px;height:6px;margin-bottom:6px"><div style="width:'+barW+'%;background:'+cor+';height:6px;border-radius:99px;transition:width .4s"></div></div>';
+      gargaloHtml += '<div style="font-size:12px;font-family:JetBrains Mono;color:var(--text2)">'+fmt(val)+'</div>';
+      gargaloHtml += '</div>';
+    });
+    gargaloHtml += '</div>';
+    // Dica de estratégia para o maior gasto
+    var top1 = catKeys[0];
+    var top1pct = totalDespMes>0?(catTotals[top1]/totalDespMes*100).toFixed(1):0;
+    if(parseFloat(top1pct)>30){
+      gargaloHtml += '<div style="background:rgba(201,79,42,.08);border:1px solid rgba(201,79,42,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--text2)">';
+      gargaloHtml += '⚠️ <strong style="color:var(--red-d)">Atenção:</strong> <strong>'+top1+'</strong> representa '+top1pct+'% das suas despesas em '+MESES[m]+'. Considere criar uma meta de redução para este item.';
+      gargaloHtml += '</div>';
+    }
+  } else {
+    gargaloHtml = '<div class="empty">Nenhuma despesa lançada neste mês.</div>';
+  }
+  document.getElementById("dash-gargalo").innerHTML = gargaloHtml;
+
+  // Receitas detalhe (inclui clínica)
+  var rLancs=lancs.filter(function(l){return (l.tipo==="receita"||l.tipo==="clinica-rec") && getMeses(l).some(function(ml){return ml.mes===m;});});
   document.getElementById("dash-rec-detail").innerHTML = rLancs.length?
-    rLancs.map(function(l){return '<div class="sum-row"><span class="sum-name">'+l.desc+'</span><span class="sum-val" style="color:var(--green-d)">'+fmt(l.valor)+'</span></div>';}).join("")
+    rLancs.map(function(l){
+      var mv=getMeses(l).find(function(ml){return ml.mes===m;});
+      var isClin=l.tipo==="clinica-rec";
+      return '<div class="sum-row"><span class="sum-name">'+l.desc+(isClin?' <span style="font-size:10px;background:var(--teal-l);color:var(--teal-d);padding:1px 6px;border-radius:99px;font-weight:700">Clínica</span>':'')+'</span><span class="sum-val" style="color:var(--green-d)">'+fmt(mv?mv.val:l.valor)+'</span></div>';
+    }).join("")
     :'<div class="empty">Nenhuma receita lançada neste mês</div>';
 }
 
@@ -1498,7 +1550,7 @@ function renderApto(){
             var pago=isPago(l.id,m);
             return '<tr class="'+(pago?"paid-row":"")+'">'+
               '<td class="center check-col"><input type="checkbox" class="check-paid" '+(pago?"checked":"")+' onchange="togglePago('+l.id+','+m+',this)"></td>'+
-              '<td><strong>'+l.desc+'</strong>'+(l.obs?'<span style="font-size:11px;color:var(--text3);display:block">'+l.obs+'</span>':'')+parc+'</td>'+
+              '<td><strong>'+l.desc+'</strong>'+(l.obs?'<span style="font-size:11px;color:var(--text3);display:block">'+l.obs+'</span>':'')+parc+(l.subcat?'<span class="badge bgr" style="display:inline-block;margin-left:4px">'+l.subcat+'</span>':'')+'</td>'+
               '<td class="center">'+(l.parcelado?'<span class="badge ba">'+l.nParc+'x</span>':'<span class="badge bgr">à vista</span>')+'</td>'+
               '<td class="right num" style="color:var(--amber)">'+(mv?fmt(mv.val):"—")+'</td>'+
               '<td class="right num" style="color:var(--text2)">'+fmt(l.valor)+'</td>'+
@@ -1521,13 +1573,15 @@ function renderCategorias(){
   var groups = [
     {tipo:"receita", label:"Receitas", icon:"💰"},
     {tipo:"fixo", label:"Despesas Fixas", icon:"🏠"},
+    {tipo:"subcat26_fixo", label:"Despesas Fixas — Subcategorias", icon:"🏷️"},
     {tipo:"cartao", label:"Tipos de Gasto — Cartão", icon:"💳"},
     {tipo:"clinica-rec", label:"Clínica — Receitas", icon:"🏥"},
     {tipo:"clinica-deb", label:"Clínica — Despesas", icon:"📋"},
     {tipo:"inv-guardado", label:"Investimentos — Guardado", icon:"🏦"},
     {tipo:"inv-investido", label:"Investimentos — Investido", icon:"📈"},
     {tipo:"inv-obra", label:"Investimentos — Reserva Vista Cabral", icon:"🏗️"},
-    {tipo:"apto-cats", label:"Vista Cabral — Subcategorias", icon:"🏢"}
+    {tipo:"apto-cats", label:"Vista Cabral — Subcategorias", icon:"🏢"},
+    {tipo:"subcat26_apto", label:"Vista Cabral — Subcategorias extras", icon:"🏷️"}
   ];
 
   var html = groups.map(function(g){
@@ -1535,6 +1589,8 @@ function renderCategorias(){
     if(g.tipo==="apto-cats"){
       // Apto cats são gerenciadas separadamente em APTO_CATS
       cats = ls_get("cats26_apto-cats") || APTO_CATS.slice();
+    } else if(g.tipo.startsWith("subcat26_")){
+      cats = ls_get(g.tipo) || [];
     } else {
       cats = getCats(g.tipo);
     }
@@ -1570,6 +1626,12 @@ function addCat(tipo){
     cats.sort(function(a,b){return a.localeCompare(b,"pt-BR");});
     ls_set("cats26_apto-cats",cats);
     APTO_CATS = cats;
+  } else if(tipo.startsWith("subcat26_")){
+    cats = ls_get(tipo) || [];
+    if(cats.indexOf(val)!==-1){alert("Já existe.");return;}
+    cats.push(val);
+    cats.sort(function(a,b){return a.localeCompare(b,"pt-BR");});
+    ls_set(tipo,cats);
   } else {
     cats=getCats(tipo);
     if(cats.indexOf(val)!==-1){alert("Categoria já existe.");return;}
@@ -1586,9 +1648,12 @@ function deleteCat(tipo, cat){
     var cats = (ls_get("cats26_apto-cats") || APTO_CATS.slice()).filter(function(c){return c!==cat;});
     ls_set("cats26_apto-cats",cats);
     APTO_CATS = cats;
+  } else if(tipo.startsWith("subcat26_")){
+    var cats2=(ls_get(tipo)||[]).filter(function(c){return c!==cat;});
+    ls_set(tipo,cats2);
   } else {
-    var cats2=getCats(tipo).filter(function(c){return c!==cat;});
-    setCats(tipo,cats2);
+    var cats3=getCats(tipo).filter(function(c){return c!==cat;});
+    setCats(tipo,cats3);
   }
   renderCategorias();
 }
@@ -1619,7 +1684,7 @@ function tblRow(l, valMes, badgeCls, mesAtual){
     (l.parcelado?'<span class="parc-badge">'+l.nParc+'x de '+fmt(l.pVal||l.valor/l.nParc)+'</span>':'')+
     (fixBadges?'<div class="fix-badges">'+fixBadges+'</div>':'')+
     '</td>'+
-    '<td><span class="badge '+badgeCls+'">'+l.cat+'</span></td>'+
+    '<td><span class="badge '+badgeCls+'">'+l.cat+'</span>'+(l.subcat?'<span class="badge bgr" style="margin-left:4px">'+l.subcat+'</span>':'')+'</td>'+
     '<td>'+MESES[l.mes]+'</td>'+
     '<td class="right num">'+fmt(valMes)+'</td>'+
     '<td class="center">'+acoes(l.id)+'</td></tr>';
@@ -1718,6 +1783,18 @@ function openModal(tipo,id,defaultCart,defaultAptoCat){
     getCats("cartao").forEach(function(c){gastoCatEl.innerHTML+='<option>'+c+'</option>';});
   }
 
+  // Subcategoria para fixo e apto
+  var showSubcat = (tipo==="fixo"||tipo==="apto");
+  document.getElementById("wrap-subcategoria").style.display=showSubcat?"block":"none";
+  if(showSubcat){
+    var subcatEl=document.getElementById("f-subcategoria");
+    document.getElementById("lbl-subcat").textContent=tipo==="apto"?"Subcategoria Vista Cabral":"Subcategoria";
+    var subcatKey="subcat26_"+tipo;
+    var subcats=ls_get(subcatKey)||[];
+    subcatEl.innerHTML='<option value="">— Nenhuma (opcional) —</option>';
+    subcats.forEach(function(c){subcatEl.innerHTML+='<option>'+c+'</option>';});
+  }
+
   // Edição
   if(id){
     var l=lancs.find(function(x){return x.id===id;});
@@ -1735,6 +1812,7 @@ function openModal(tipo,id,defaultCart,defaultAptoCat){
       if(l.cartao) document.getElementById("f-cartao").value=l.cartao;
       if(l.aptocat) document.getElementById("f-apto-cat").value=l.aptocat;
       if(l.gastoCat) document.getElementById("f-gasto-cat").value=l.gastoCat;
+      if(l.subcat) document.getElementById("f-subcategoria").value=l.subcat;
       if(l.invTipo){
         document.getElementById("f-inv-tipo").value=l.invTipo;
         updateInvSub();
@@ -1808,6 +1886,7 @@ async function salvar(){
   var cartao=document.getElementById("f-cartao").value;
   var aptocat=document.getElementById("f-apto-cat").value;
   var gastoCat=document.getElementById("f-gasto-cat").value;
+  var subcat=document.getElementById("f-subcategoria").value||"";
   var invTipo=document.getElementById("f-inv-tipo").value;
   var invSub=document.getElementById("f-inv-sub").value;
   var recorrente = tipo==="fixo" ? document.getElementById("f-fix-recorrente").checked : false;
@@ -1821,7 +1900,7 @@ async function salvar(){
     id:editId?parseInt(editId):uid(),
     tipo:tipo,desc:desc,valor:valor,mes:mes,obs:obs,
     parcelado:parcelado,nParc:nParc,pInicio:pInicio,pVal:pVal,
-    cat:cat,cartao:cartao,aptocat:aptocat,gastoCat:gastoCat,
+    cat:cat,cartao:cartao,aptocat:aptocat,gastoCat:gastoCat,subcat:subcat,
     invTipo:invTipo,recorrente:recorrente,tipoValor:tipoValor
   };
 
@@ -1851,13 +1930,31 @@ async function salvar(){
       var deveReplicar = recorrente || replica==="all";
       if(deveReplicar){
         for(var m2=mes+1;m2<=11;m2++){
-          var valReplica = tipoValor==="variavel" ? valor : valor; // variável começa igual mas pode mudar
+          var valReplica = tipoValor==="variavel" ? valor : valor;
           lancs.push({
             id:uid(),tipo:tipo,desc:desc,valor:valReplica,mes:m2,obs:obs,
             parcelado:false,nParc:1,pInicio:1,pVal:valReplica,
-            cat:cat,cartao:"",aptocat:"",gastoCat:"",invTipo:"",
+            cat:cat,cartao:"",aptocat:"",gastoCat:"",subcat:subcat,invTipo:"",
             recorrente:recorrente,tipoValor:tipoValor
           });
+        }
+      }
+    }
+    // Replicar salário fixo automaticamente nos meses seguintes
+    if(tipo==="receita" && (cat==="Salário"||cat==="Pró-Labore")){
+      var jaExiste = lancs.filter(function(x){
+        return x.tipo==="receita" && (x.cat==="Salário"||x.cat==="Pró-Labore") && x.desc===desc && x.mes>mes;
+      });
+      if(jaExiste.length===0){
+        if(confirm('Deseja repetir "'+desc+'" ('+cat+') automaticamente nos meses seguintes até dezembro?')){
+          for(var ms2=mes+1;ms2<=11;ms2++){
+            lancs.push({
+              id:uid(),tipo:"receita",desc:desc,valor:valor,mes:ms2,obs:obs,
+              parcelado:false,nParc:1,pInicio:1,pVal:valor,
+              cat:cat,cartao:"",aptocat:"",gastoCat:"",subcat:"",invTipo:"",
+              recorrente:true,tipoValor:"fixo"
+            });
+          }
         }
       }
     }
@@ -1904,4 +2001,5 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
+
 
