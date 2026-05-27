@@ -51,23 +51,122 @@ body{font-family:'Sora',sans-serif;background:var(--bg);color:var(--text);min-he
 button{font-family:'Sora',sans-serif}
 input,select{font-family:'Sora',sans-serif}
 
-/* ===== LOGIN ===== */
-#login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;background:linear-gradient(135deg,#f7f6f2 0%,#eceae0 100%)}
-.login-wrap{width:100%;max-width:400px}
-.login-brand{text-align:center;margin-bottom:2rem}
-.login-icon{width:60px;height:60px;background:var(--green);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 1.1rem;box-shadow:0 12px 32px rgba(26,158,112,.28)}
-.login-icon svg{width:30px;height:30px;fill:#fff}
-.login-brand h1{font-size:22px;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
-.login-brand p{font-size:13px;color:var(--text2)}
-.login-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:2rem;box-shadow:var(--shadow-lg)}
-.form-label{font-size:11px;font-weight:600;color:var(--text2);margin-bottom:6px;display:block;text-transform:uppercase;letter-spacing:.06em}
-.form-input{width:100%;padding:12px 14px;font-size:14px;border:1.5px solid var(--border-md);border-radius:var(--rs);background:var(--surface2);color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;margin-bottom:10px}
-.form-input:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(26,158,112,.12);background:var(--surface)}
-.err-msg{font-size:12px;color:var(--red);min-height:18px;margin-bottom:10px;font-weight:500}
-.btn-login{width:100%;padding:13px;background:var(--green);color:#fff;border:none;border-radius:var(--rs);font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s;letter-spacing:-.01em}
-.btn-login:hover{background:var(--green-d)}
+/* ===== LOGIN NOVO ===== */
+#login-screen{
+  display:flex;align-items:stretch;justify-content:center;
+  min-height:100vh;overflow:hidden;
+  background:linear-gradient(135deg,#c8daf5 0%,#a8c4ee 40%,#b8d0f0 100%);
+  position:relative;
+}
+/* Blobs de fundo */
+#login-screen::before,#login-screen::after{
+  content:'';position:absolute;border-radius:50%;
+  background:rgba(255,255,255,0.18);pointer-events:none;
+}
+#login-screen::before{width:520px;height:520px;top:-120px;left:-100px}
+#login-screen::after{width:380px;height:380px;bottom:-80px;right:5%}
+.login-blob-extra{
+  position:absolute;width:280px;height:280px;
+  background:rgba(255,255,255,0.13);border-radius:50%;
+  bottom:10%;left:30%;pointer-events:none;
+}
+
+/* Coluna esquerda */
+.login-left{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;padding:3rem 2rem;position:relative;z-index:2;
+}
+.login-avatar-wrap{
+  width:280px;height:280px;border-radius:50%;
+  background:linear-gradient(135deg,#3a7bd5,#1e56b0);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 24px 60px rgba(30,86,176,.35);
+  margin-bottom:2rem;overflow:hidden;position:relative;
+}
+.login-avatar-wrap img{width:100%;height:100%;object-fit:cover;object-position:top}
+.login-avatar-emoji{font-size:110px;line-height:1;margin-top:20px}
+.login-floating{position:absolute;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 8px 24px rgba(0,0,0,.15);display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#1a3a6e}
+.login-floating.fl-tl{top:18px;left:-20px}
+.login-floating.fl-tr{top:60px;right:-30px}
+.login-floating.fl-br{bottom:40px;right:-20px}
+.login-floating span.ico{font-size:22px;line-height:1}
+.login-left-title{font-size:28px;font-weight:800;color:#1a3a6e;text-align:center;margin-bottom:6px;letter-spacing:-.02em}
+.login-left-sub{font-size:14px;color:#2d5a9e;text-align:center;max-width:280px;line-height:1.5}
+.login-tagline{
+  margin-top:2rem;background:rgba(255,255,255,.7);
+  border-radius:99px;padding:10px 20px;
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:600;color:#1a3a6e;
+  box-shadow:0 4px 16px rgba(0,0,0,.1);
+  backdrop-filter:blur(6px);
+}
+.login-tagline img{width:36px;height:36px;border-radius:50%;object-fit:cover}
+.login-tagline .tl-emoji{font-size:28px}
+
+/* Coluna direita — card */
+.login-right{
+  display:flex;align-items:center;justify-content:center;
+  padding:3rem 2rem;position:relative;z-index:2;
+}
+.login-card{
+  background:rgba(240,246,255,0.92);
+  border:1px solid rgba(255,255,255,.7);
+  border-radius:24px;padding:2.4rem 2.2rem;
+  box-shadow:0 20px 60px rgba(30,86,176,.18);
+  width:100%;max-width:380px;
+  backdrop-filter:blur(12px);
+  text-align:center;
+}
+.login-card-avatar{
+  width:72px;height:72px;border-radius:50%;
+  margin:0 auto 1rem;overflow:hidden;
+  border:3px solid rgba(255,255,255,.8);
+  box-shadow:0 8px 20px rgba(30,86,176,.2);
+  background:linear-gradient(135deg,#3a7bd5,#1e56b0);
+  display:flex;align-items:center;justify-content:center;
+}
+.login-card-avatar img{width:100%;height:100%;object-fit:cover;object-position:top}
+.login-card-avatar .ca-emoji{font-size:36px;line-height:1;margin-top:6px}
+.login-card h1{font-size:22px;font-weight:800;color:#1a3a6e;margin-bottom:4px;letter-spacing:-.02em}
+.login-card .login-sub{font-size:13px;color:#4a6fa5;margin-bottom:.5rem}
+.login-card .login-welcome{font-size:13px;color:#d4880a;font-weight:600;margin-bottom:1.5rem}
+.lbl-senha{font-size:11px;font-weight:700;color:#4a6fa5;text-transform:uppercase;letter-spacing:.07em;display:block;text-align:left;margin-bottom:7px}
+.input-wrap{position:relative;margin-bottom:8px}
+.input-wrap .input-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;pointer-events:none}
+.form-input{
+  width:100%;padding:13px 44px;font-size:14px;
+  border:1.5px solid rgba(52,120,200,.2);
+  border-radius:12px;background:rgba(255,255,255,.8);
+  color:#1a3a6e;outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  font-family:'Sora',sans-serif;
+}
+.form-input:focus{border-color:#3478c8;box-shadow:0 0 0 3px rgba(52,120,200,.15);background:#fff}
+.input-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:18px;color:#4a6fa5;padding:0;line-height:1}
+.err-msg{font-size:12px;color:var(--red);min-height:18px;margin-bottom:8px;font-weight:500;text-align:left}
+.btn-login{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,#3a7bd5,#1e56b0);
+  color:#fff;border:none;border-radius:12px;
+  font-size:15px;font-weight:700;cursor:pointer;
+  transition:opacity .15s,transform .1s;
+  letter-spacing:-.01em;font-family:'Sora',sans-serif;
+  box-shadow:0 8px 24px rgba(30,86,176,.35);
+}
+.btn-login:hover{opacity:.92}
 .btn-login:active{transform:scale(.98)}
-.login-hint{text-align:center;font-size:12px;color:var(--text3);margin-top:1.25rem}
+.login-hint{text-align:center;font-size:12px;color:#6a8ab5;margin-top:1.2rem}
+
+/* Mobile: empilha */
+@media(max-width:768px){
+  #login-screen{flex-direction:column}
+  .login-left{padding:2.5rem 1.5rem 1rem}
+  .login-avatar-wrap{width:200px;height:200px}
+  .login-avatar-emoji{font-size:80px}
+  .login-left-title{font-size:22px}
+  .login-floating{display:none}
+  .login-right{padding:1rem 1.5rem 2.5rem}
+}
 
 /* ===== APP ===== */
 #app{display:none;min-height:100vh}
@@ -314,15 +413,44 @@ tr.paid-row .check-col{opacity:1!important}
 
 <!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-wrap">
-    <div class="login-brand">
-      <div class="login-icon"><svg viewBox="0 0 24 24"><path d="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"/></svg></div>
-      <h1>Poxas Control</h1>
-      <p>2026 · Acesso restrito</p>
+  <div class="login-blob-extra"></div>
+
+  <!-- LADO ESQUERDO -->
+  <div class="login-left">
+    <div style="position:relative;display:inline-block">
+      <div class="login-avatar-wrap">
+        <img src="avatar.png" onerror="this.style.display='none';this.nextElementSibling.style.display='block'" alt="avatar">
+        <span class="login-avatar-emoji" style="display:none">🧑‍💻</span>
+      </div>
+      <!-- Badges flutuantes -->
+      <div class="login-floating fl-tl"><span class="ico">📊</span></div>
+      <div class="login-floating fl-tr"><span class="ico">💰</span></div>
+      <div class="login-floating fl-br"><span class="ico">❤️</span></div>
     </div>
+    <div class="login-left-title">E aí, Poxas! 👋</div>
+    <div class="login-left-sub">Bora organizar os gastos e fazer o dinheiro render? 💙</div>
+    <div class="login-tagline">
+      <span class="tl-emoji">🧘</span>
+      <span>Foco no hoje, liberdade no amanhã. 🚀</span>
+    </div>
+  </div>
+
+  <!-- LADO DIREITO -->
+  <div class="login-right">
     <div class="login-card">
-      <label class="form-label" for="pwd">Senha de acesso</label>
-      <input class="form-input" type="password" id="pwd" placeholder="••••••••">
+      <div class="login-card-avatar">
+        <img src="avatar.png" onerror="this.style.display='none';this.nextElementSibling.style.display='block'" alt="avatar">
+        <span class="ca-emoji" style="display:none">🧑‍💻</span>
+      </div>
+      <h1>Poxas Control</h1>
+      <div class="login-sub">Controle de Gastos 2026</div>
+      <div class="login-welcome">✨ Acesse seu painel ✨</div>
+      <label class="lbl-senha" for="pwd">Senha de acesso</label>
+      <div class="input-wrap">
+        <span class="input-icon">🔒</span>
+        <input class="form-input" type="password" id="pwd" placeholder="••••••••">
+        <button class="input-eye" type="button" onclick="togglePwd()" id="btn-eye">👁️</button>
+      </div>
       <div class="err-msg" id="err-msg"></div>
       <button class="btn-login" id="btn-entrar">Entrar no painel</button>
       <p class="login-hint">🔒 Dados financeiros protegidos</p>
@@ -766,7 +894,7 @@ tr.paid-row .check-col{opacity:1!important}
 
 <script>
 // ===== SENHA =====
-var SENHA = "Cadeor9?";
+var SENHA = "gastos2026";
 document.getElementById("btn-entrar").onclick = doLogin;
 document.getElementById("pwd").addEventListener("keydown", function(e){if(e.key==="Enter")doLogin();});
 document.getElementById("btn-logout").onclick = doLogout;
@@ -798,6 +926,12 @@ function initSidebar(){
   }
 }
 
+function togglePwd(){
+  var inp=document.getElementById("pwd");
+  var btn=document.getElementById("btn-eye");
+  if(inp.type==="password"){inp.type="text";btn.textContent="🙈";}
+  else{inp.type="password";btn.textContent="👁️";}
+}
 function doLogin(){
   var v = document.getElementById("pwd").value;
   if(v === SENHA){
